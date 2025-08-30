@@ -699,6 +699,8 @@ MiniFiles.config = {
     permanent_delete = true,
     -- Whether to use for editing directories
     use_as_default_explorer = true,
+    -- Wheter to disable synchronization confirmation dialog
+    disable_synchronization_dialog = false;
   },
 
   -- Customization of explorer windows
@@ -833,10 +835,14 @@ MiniFiles.synchronize = function()
   -- Parse and apply file system operations
   local fs_actions = H.explorer_compute_fs_actions(explorer)
   if fs_actions ~= nil then
-    local msg = table.concat(H.fs_actions_to_lines(fs_actions), '\n')
-    local confirm_res = vim.fn.confirm(msg, '&Yes\n&No\n&Cancel', 1, 'Question')
-    if confirm_res == 3 then return false end
-    if confirm_res == 1 then H.fs_actions_apply(fs_actions) end
+    if explorer.opts.options.disable_synchronization_dialog == false then
+      local msg = table.concat(H.fs_actions_to_lines(fs_actions), '\n')
+      local confirm_res = vim.fn.confirm(msg, '&Yes\n&No\n&Cancel', 1, 'Question')
+      if confirm_res == 3 then return false end
+      if confirm_res == 1 then H.fs_actions_apply(fs_actions) end
+    else
+      H.fs_actions_apply(fs_actions)
+    end
   end
 
   H.explorer_refresh(explorer, { force_update = true })
@@ -1299,6 +1305,7 @@ H.setup_config = function(config)
   H.check_type('options', config.options, 'table')
   H.check_type('options.use_as_default_explorer', config.options.use_as_default_explorer, 'boolean')
   H.check_type('options.permanent_delete', config.options.permanent_delete, 'boolean')
+  H.check_type('options.disable_synchronization_dialog', config.options.disable_synchronization_dialog, 'boolean')
 
   H.check_type('windows', config.windows, 'table')
   H.check_type('windows.max_number', config.windows.max_number, 'number')
